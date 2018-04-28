@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block title %} Info {% endblock %}
+{% block form %}
+        <h2>Nie podałeś treści!</h2>
+
+        <form method="POST" action="{{ path('chat') }}">
+            <button class="btn btn-dark" type="submit">Powrót</button>
+        </form>
+{% endblock %}
