@@ -13,9 +13,12 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
+
 if(!isset($_SESSION)) {
-    session_start();
-    $_SESSION['error'] = "";
+    $session = new Session();
+    $session->start();
+    $session->set('error', '');
 }
 
 class MessagesController extends AbstractController
@@ -23,10 +26,10 @@ class MessagesController extends AbstractController
     /**
      * @Route("/logout", name="logout")
      */
-    public function logout()
+    public function logout(Session $session)
     {
-        unset($_SESSION['user']);
-        unset($_SESSION['nickname']);
+        $session->remove('user');
+        $session->remove('nickname');
 
         return $this->render('logout.html.twig');
     }
@@ -99,56 +102,56 @@ class MessagesController extends AbstractController
      * @Route("/login", name="login")
      * @Route ("/login/{zmienna}")
      */
-    public function login($zmienna = null)
+    public function login($zmienna = null, Session $session)
     {
-        if ((isset($_SESSION['nickname'])) && (strlen($_SESSION['nickname']) > 0)) {
+        if (($session->has('nickname')) && (strlen($session->get('nickname')) > 0)) {
             return $this->redirectToRoute('chat');
         }
         if ($zmienna != null) {
             if ($zmienna == "h6SJrXUiQtH00JJEfi5oYvbmz6nyU6iAVS3q5Igc")
-                $_SESSION['user'] = "moderator";
+                $session->set('user', 'moderator');
             if ($zmienna == "oQDUuIlLxUbWZiNa6iukYVCCapiGSg5XxvcGuyXa")
-                $_SESSION['user'] = "ekspert";
+                $session->set('user', 'ekspert');
         }else{
-            $_SESSION['user'] = "uczestnik";
+            $session->set('user', 'uczestnik');
         }
         return $this->render('login.html.twig', [
-            'user' => $_SESSION['user']
+            'user' => $session->get('user')
         ]);
     }
 
     /**
      * @Route("/chat", name="chat")
      */
-    public function chat(Request $request)
+    public function chat(Request $request, Session $session)
     {
-        if ((!isset($_SESSION['nickname'])) || (strlen($_SESSION['nickname']) < 1)) {
-            $_SESSION['nickname'] = $request->request->get('nickname');
+        if ((($session->has('nickname')) == false) || (strlen($session->get('nickname')) < 1)) {
+            $session->set('nickname', $request->request->get('nickname'));
 
-            if ($_SESSION['user'] == "moderator") {
-                $_SESSION['nickname'] = ($_SESSION['nickname'] . "(moderator)");
-            } elseif ($_SESSION['user'] == "ekspert") {
-                $_SESSION['nickname'] = ($_SESSION['nickname'] . "(ekspert)");
+            if ($session->get('user') == "moderator") {
+                $session->set('nickname', $session->get('nickname') . "(moderator)");
+            } elseif ($session->get('user') == "ekspert") {
+                $session->set('nickname', $session->get('nickname') . "(ekspert)");
             }
         }
 
 
-        if ($_SESSION['user'] != "uczestnik") {
+        if ($session->get('user') != "uczestnik") {
             $repository = $this->getDoctrine()->getRepository(Message::class);
             $newMessages = $repository->findBy(
                 ['status' => "new"],
                 ['input_date' => 'DESC']
             );
-        }elseif ($_SESSION['user'] == "uczestnik") {
+        }elseif ($session->get('user') == "uczestnik") {
             $repository = $this->getDoctrine()->getRepository(Message::class);
             $myMessages = $repository->findBy(
                 ['status' => "new",
-                'author' => $_SESSION['nickname']],
+                'author' => $session->get('nickname')],
                 ['input_date' => 'DESC']
             );
             $infoMessages = $repository->findBy(
                 ['info' => ["accept", "decline"],
-                    'author' => $_SESSION['nickname']],
+                    'author' => $session->get('nickname')],
                 ['input_date' => 'DESC']
             );
         }
@@ -158,25 +161,25 @@ class MessagesController extends AbstractController
             ['input_date' => 'DESC']
         );
 
-        if (strlen($_SESSION['nickname']) < 1){
+        if (strlen($session->get('nickname')) < 1){
             return $this->render('nickerror.html.twig');
         }else {
-            if ($_SESSION['user'] != "uczestnik") {
+            if ($session->get('user') != "uczestnik") {
                 return $this->render('show.html.twig', [
-                    'user' => $_SESSION['user'],
-                    'nickname' => $_SESSION['nickname'],
+                    'user' => $session->get('user'),
+                    'nickname' => $session->get('nickname'),
                     'newMessages' => $newMessages,
                     'acceptedMessages' => $acceptedMessages,
-                    'error' => $_SESSION['error']
+                    'error' => $session->get('error')
                 ]);
-            }elseif ($_SESSION['user'] == "uczestnik") {
+            }elseif ($session->get('user') == "uczestnik") {
                 return $this->render('show.html.twig', [
-                    'user' => $_SESSION['user'],
-                    'nickname' => $_SESSION['nickname'],
+                    'user' => $session->get('user'),
+                    'nickname' => $session->get('nickname'),
                     'myMessages' => $myMessages,
                     'infoMessages' => $infoMessages,
                     'acceptedMessages' => $acceptedMessages,
-                    'error' => $_SESSION['error']
+                    'error' => $session->get('error')
                 ]);
             }
         }
@@ -185,15 +188,15 @@ class MessagesController extends AbstractController
     /**
      * @Route("/send", name="send")
      */
-    public function send(Request $request)
+    public function send(Request $request, Session $session)
     {
-        $_SESSION['error'] = "";
+        $session->set('error', '');
         $datenow = date("Y-m-d H:i:s");
-        $author = $_SESSION['nickname'];
+        $author = $session->get('nickname');
         $description = $request->request->get('description');
-        if ($_SESSION['user'] == "uczestnik")
+        if ($session->get('user') == "uczestnik")
             $status="new";
-        else if (($_SESSION['user'] == "moderator") || ($_SESSION['user'] == "ekspert"))
+        else if (($session->get('user') == "moderator") || ($session->get('user') == "ekspert"))
             $status="accepted";
 
         $entityManager = $this->getDoctrine()->getManager();
@@ -210,9 +213,9 @@ class MessagesController extends AbstractController
 
             return $this->redirectToRoute('chat');
         }else {
-            $_SESSION['error'] = "Podaj treść wiadomości!";
+            $session->set('error', 'Podaj treść wiadomości!');
             return $this->render('senderror.html.twig', [
-                'error' => $_SESSION['error']
+                'error' => $session->get('error')
             ]);
         }
     }
