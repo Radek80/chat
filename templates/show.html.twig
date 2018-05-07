@@ -10,14 +10,6 @@
     </form>
     Twój nick to {{ nickname }}
 </div>
-<div class="alert alert-info">
-    <h3>Napisz coś na czacie</h3>
-    <form method="POST" action="{{ path('send') }}">
-        Wprowadź treść wiadomości: <input type="text" class="form-control" name="description">
-        <button class="btn btn-info" type="submit">Wyślij</button><br>
-    </form>
-</div>
-
 {% if acceptedMessages == null %}
     <h4><p class="text-light">Brak wiadomości na czacie</p></h4>
 {% else %}
@@ -47,7 +39,7 @@
     <div class="row">
         <div class="col">
             <h3><p class="text-dark">Okno czatu:</p></h3>
-            <table class="table table-sm table-borderless"><thead class="thead-dark"><tr><th>Czat</th></tr></thead><tbody style="display: block; height: 300px; overflow-y: scroll">
+            <table class="table table-sm table-borderless"><thead class="thead-dark"><tr><th>Czat</th></tr></thead><tbody style="display: block; background-color: whitesmoke; height: 300px; overflow-y: scroll">
                 {% for acceptedMessage in acceptedMessages %}
                     <tr>
                         <td>{{ acceptedMessage.inputdate }} - </td>
@@ -57,7 +49,12 @@
                 {% endfor %}
                 </tbody>
             </table>
+            <form method="POST" action="{{ path('send') }}">
+                Wprowadź treść wiadomości: <input type="text" class="form-control" name="description">
+                <button class="btn btn-dark" type="submit">Wyślij</button>
+            </form>
         </div>
+
 {% endif %}
 {% if user == "uczestnik" %}
     <div class="col">
@@ -65,10 +62,10 @@
         <h4><p class="text-dark">Brak wiadomości oczekujących</p></h4>
     {% else %}
         <h3><p class="text-dark">Twoje wiadomości oczekujące na opublikowanie</p></h3>
-        <table class="table table-striped table-responsive"><thead class="thead-dark"><tr><th>Treść</th><th>Autor</th><th>Data dodania</th><th>Status</th></tr></thead><tbody>
+        <table class="table table-sm table-borderless table-responsive"><thead class="thead-dark"><tr><th>Treść</th><th>Autor</th><th>Data dodania</th><th>Status</th></tr></thead><tbody style="background-color: whitesmoke">
             {% for myMessage in myMessages %}
                 <td>{{ myMessage.description }}</td>
-                <td><b>{{ myMessage.author }}<b></td>
+                <td><b>{{ myMessage.author }}</b></td>
                 <td>{{ myMessage.inputdate }}</td>
                 <td>{{ myMessage.status}}</td>
                 </tr>
@@ -82,17 +79,17 @@
         <h4><p class="text-dark">Brak wiadomości oczekujących</p></h4>
     {% else %}
         <h3><p class="text-dark">Wiadomości oczekujące na opublikowanie</p></h3>
-        <table class="table table-striped table-fixed"><thead class="thead-dark"><tr><th>Treść</th><th>Autor</th><th>Data dodania</th><th>Status</th></tr></thead><tbody>
+        <table class="table table-sm table-borderless table-responsive"><thead class="thead-dark"><tr><th>Treść</th><th>Autor</th><th>Data dodania</th><th>Status</th></tr></thead><tbody style="background-color: whitesmoke">
             {% for newMessage in newMessages %}
                 <td>{{ newMessage.description }}</td>
                 <td>{{ newMessage.author }}</td>
                 <td>{{ newMessage.inputdate }}</td>
                 <td>{{ newMessage.status}}</td>
                 <form method="POST" action="{{ path('accept') }}">
-                    <td><button type="submit" name="id" value="{{ newMessage.id }}">Akceptuj</button></td>
+                    <td><button class="btn btn-sm btn-dark" type="submit" name="id" value="{{ newMessage.id }}">Akceptuj</button></td>
                 </form>
                 <form method="POST" action="{{ path('decline') }}">
-                    <td><button type="submit" name="id" value="{{ newMessage.id }}">Odrzuć</button></td>
+                    <td><button class="btn btn-sm btn-dark" type="submit" name="id" value="{{ newMessage.id }}">Odrzuć</button></td>
                 </form>
                 </tr>
             {% endfor %}</tbody>

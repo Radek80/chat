@@ -14,6 +14,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Security\Core\Role\Role;
+use Symfony\Component\Security\Core\Role\SwitchUserRole;
 
 if(!isset($_SESSION)) {
     $session = new Session();
@@ -37,35 +39,39 @@ class MessagesController extends AbstractController
     /**
      * @Route("/accept", name="accept")
      */
-    public function accept(Request $request)
+    public function accept(Request $request, Session $session)
     {
-        $id = $request->request->get('id');
-        $datenow = date("Y-m-d H:i:s");
-        $entityManager = $this->getDoctrine()->getManager();
-        $updatedMessage = $entityManager->getRepository(Message::class)->find($id);
+        if ( $session->get('user') == "moderator") {
+            $id = $request->request->get('id');
+            $datenow = date("Y-m-d H:i:s");
+            $entityManager = $this->getDoctrine()->getManager();
+            $updatedMessage = $entityManager->getRepository(Message::class)->find($id);
 
-        $updatedMessage->setStatus('accepted');
-        $updatedMessage->setInfo('accept');
-        $updatedMessage->setInputDate($datenow);
-        $entityManager->flush();
+            $updatedMessage->setStatus('accepted');
+            $updatedMessage->setInfo('accept');
+            $updatedMessage->setInputDate($datenow);
+            $entityManager->flush();
 
-        return $this->redirectToRoute('chat');
+            return $this->redirectToRoute('chat');
+        }
     }
 
     /**
      * @Route("/decline", name="decline")
      */
-    public function decline(Request $request)
+    public function decline(Request $request, Session $session)
     {
-        $id = $request->request->get('id');
-        $entityManager = $this->getDoctrine()->getManager();
-        $updatedMessage = $entityManager->getRepository(Message::class)->find($id);
+        if ( $session->get('user') == "moderator") {
+            $id = $request->request->get('id');
+            $entityManager = $this->getDoctrine()->getManager();
+            $updatedMessage = $entityManager->getRepository(Message::class)->find($id);
 
-        $updatedMessage->setStatus('declined');
-        $updatedMessage->setInfo('decline');
-        $entityManager->flush();
+            $updatedMessage->setStatus('declined');
+            $updatedMessage->setInfo('decline');
+            $entityManager->flush();
 
-        return $this->redirectToRoute('chat');
+            return $this->redirectToRoute('chat');
+        }
     }
 
     /**
@@ -108,10 +114,14 @@ class MessagesController extends AbstractController
             return $this->redirectToRoute('chat');
         }
         if ($zmienna != null) {
-            if ($zmienna == "h6SJrXUiQtH00JJEfi5oYvbmz6nyU6iAVS3q5Igc")
+            if ($zmienna == "h6SJrXUiQtH00JJEfi5oYvbmz6nyU6iAVS3q5Igc") {
                 $session->set('user', 'moderator');
-            if ($zmienna == "oQDUuIlLxUbWZiNa6iukYVCCapiGSg5XxvcGuyXa")
+                //$role = new Role('ROLE_MODERATOR');
+            }
+            if ($zmienna == "oQDUuIlLxUbWZiNa6iukYVCCapiGSg5XxvcGuyXa") {
                 $session->set('user', 'ekspert');
+                //$role = new Role('ROLE_EKSPERT');
+            }
         }else{
             $session->set('user', 'uczestnik');
         }
@@ -125,8 +135,13 @@ class MessagesController extends AbstractController
      */
     public function chat(Request $request, Session $session)
     {
+
         if ((($session->has('nickname')) == false) || (strlen($session->get('nickname')) < 1)) {
             $session->set('nickname', $request->request->get('nickname'));
+
+            if (strlen($request->request->get('nickname')) < 1) {
+                return $this->render('nickerror.html.twig');
+            }
 
             if ($session->get('user') == "moderator") {
                 $session->set('nickname', $session->get('nickname') . "(moderator)");

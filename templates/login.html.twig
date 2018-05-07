@@ -1,19 +1,13 @@
 {% extends 'base.html.twig' %}
 {% block title %} Logowanie {% endblock %}
 {% block form %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card rounded-0">
-                <div class="card-header">
-                    <h2>Wprowadź swój nick</h2>
-                    <form method="POST" action="{{ path('chat') }}">
-                        Nick: <input type="text" name="nickname"><br>
-                        <button class="btn btn-dark" type="submit">Zatwierdź</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+<div class="container">
+    <div class="form-group">
+        <h3 style="margin-top: 50px">Wprowadź swój nick</h3>
+        <form method="POST" action="{{ path('chat') }}">
+            <input type="text" class="form-control" placeholder="Nazwa użytkownika" name="nickname" style="width: auto"><br>
+            <button class="btn btn-dark" type="submit">Zatwierdź</button>
+        </form>
     </div>
 </div>
 {% endblock %}
